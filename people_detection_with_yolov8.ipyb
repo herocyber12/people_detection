@@ -1,0 +1,45 @@
+import cv2
+from ultralytics import YOLO
+from google.colab import drive
+from matplotlib import pyplot as plt
+
+# Mount Google Drive
+drive.mount('/content/drive')
+
+# Load YOLOv8 model
+model = YOLO('yolov8s.pt')  # Menggunakan model YOLOv8 kecil
+
+# Load image
+img_path = '/content/drive/MyDrive/PROGRAMS/depositphotos_59954731-stock-photo-large-group-of-people.jpg'
+img = cv2.imread(img_path)
+
+# Cek apakah gambar terload dengan benar
+if img is None:
+    print(f"Error: Gambar tidak dapat dimuat dari {img_path}")
+else:
+    #mengkonversi gambar ke tipe gambar RGB
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    #mendeteksi object dengan nilai ambang kepercayaan 0.25
+    results = model(img_rgb, conf=0.25)
+
+    # mengekstrak kotak pembatas (bounding box) dari hasil deteksi
+    detections = results[0].boxes
+
+    # menghitung object orang yang terdeteksi
+    num_people = 0
+    for detection in detections:
+        class_id = int(detection.cls)
+        confidence = detection.conf
+        if class_id == 0 and confidence > 0.25:  # Class id untuk orang  dataset COCO adalah 0
+            num_people += 1
+
+    # print hasil perhitungan
+    print(f'Number of people detected: {num_people}')
+
+    # memvisualkan hasil deteksi dengan matplotlib
+    annotated_img = results[0].plot()  # Get annotated image with bounding boxes
+
+    plt.imshow(cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB))
+    plt.axis('off')
+    plt.show()
